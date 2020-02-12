@@ -1,0 +1,62 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.31.2.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: 74f9932bf9fc8a403e75e4e805f5937b6d630938d12d94a49a51fee603e05b0d
+
+name:           calculus-solver
+version:        0.1.0.0
+description:    Please see the README on GitHub at <https://github.com/zwinkele/calculus-solver#readme>
+homepage:       https://github.com/zwinkele/calculus-solver#readme
+bug-reports:    https://github.com/zwinkele/calculus-solver/issues
+author:         Zachary Winkeler and Bruce Zou
+maintainer:     zachary.j.winkeler.gr@dartmouth.edu and bruce.j.zou.21@dartmouth.edu
+copyright:      Zachary Winkeler and Bruce Zou
+license:        BSD3
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+    ChangeLog.md
+
+source-repository head
+  type: git
+  location: https://github.com/githubuser/calculus-solver
+
+library
+  exposed-modules:
+      Structures
+  other-modules:
+      Paths_calculus_solver
+  hs-source-dirs:
+      src
+  build-depends:
+      base >=4.7 && <5
+  default-language: Haskell2010
+
+executable calculus-solver-exe
+  main-is: Main.hs
+  other-modules:
+      Paths_calculus_solver
+  hs-source-dirs:
+      app
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      base >=4.7 && <5
+    , calculus-solver
+  default-language: Haskell2010
+
+test-suite calculus-solver-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      Paths_calculus_solver
+  hs-source-dirs:
+      test
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      base >=4.7 && <5
+    , calculus-solver
+  default-language: Haskell2010
