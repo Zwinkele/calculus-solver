@@ -6,10 +6,12 @@ import Data.MultiSet
 
 main :: IO ()
 main = do {
-    putStrLn "Tests are currently just example data:";
+    putStrLn "Example data:";
     putStrLn (show example1);
     putStrLn (show example2);
     putStrLn (show example3);
+    putStrLn "\n";
+    putStrLn "Example parsing:";
     parseTest law "commutativity : x : x+1 = 1+x";
     parseTest law "associativity : x,y,z : x*(y*z) = (x*y)*z";
     putStrLn (show (calculate (Constant 3)))}
