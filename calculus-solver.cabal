@@ -28,6 +28,8 @@ source-repository head
 library
   exposed-modules:
       Structures
+    , Parser
+    , Derivation
   other-modules:
       Paths_calculus_solver
   hs-source-dirs:
@@ -35,6 +37,8 @@ library
   build-depends:
       base >=4.7 && <5
     , multiset
+    , megaparsec
+    , parser-combinators
   default-language: Haskell2010
 
 executable calculus-solver-exe
@@ -61,4 +65,5 @@ test-suite calculus-solver-test
       base >=4.7 && <5
     , calculus-solver
     , multiset
+    , megaparsec
   default-language: Haskell2010

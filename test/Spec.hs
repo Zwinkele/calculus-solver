@@ -1,4 +1,7 @@
 import Structures
+import Parser
+import Derivation
+import Text.Megaparsec
 import Data.MultiSet
 
 main :: IO ()
@@ -6,7 +9,10 @@ main = do {
     putStrLn "Tests are currently just example data:";
     putStrLn (show example1);
     putStrLn (show example2);
-    putStrLn (show example3)}
+    putStrLn (show example3);
+    parseTest law "commutativity : x : x+1 = 1+x";
+    parseTest law "associativity : x,y,z : x*(y*z) = (x*y)*z";
+    putStrLn (show (calculate (Constant 3)))}
 
 -- f(x)
 example1 = 
@@ -18,7 +24,7 @@ example1 =
 example2 = 
     ACOperation 
         Add 
-        (Data.MultiSet.fromList [(Constant 1), (Constant 2), (Constant 3)])
+        [(Constant 1), (Constant 2), (Constant 3)]
 
 -- d/dz(z^2)
 example3 = 
