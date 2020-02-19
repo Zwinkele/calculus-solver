@@ -66,4 +66,6 @@ test-suite calculus-solver-test
     , calculus-solver
     , multiset
     , megaparsec
+    , tasty
+    , tasty-hunit
   default-language: Haskell2010

@@ -17,7 +17,7 @@ expression :: Parser Expression
 expression = makeExprParser term table <?> "expression"
 
 term :: Parser Expression
-term = parens expression <|> constant <|> derivative <|> try function <|> ref <?> "term"
+term = space *> (parens expression <|> constant <|> derivative <|> try function <|> ref) <* space <?> "term"
 
 constant :: Parser Expression
 constant = do {n <- some digitChar;
@@ -63,7 +63,7 @@ table =
         binary "-" subExpr ] ]
 
 law :: Parser Law
-law = do {name <- (someTill asciiChar (char ':'));
+law = do {name <- (someTill asciiChar (try (space *> (char ':'))));
           _ <- space;
           freeVars <- sepBy var (char ',');
           _ <- space *> (char ':') <* space;
