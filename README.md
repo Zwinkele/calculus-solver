@@ -2,7 +2,7 @@
 
 Current progress:
     - The data structures that we expect to need for the project are in Structures.hs.
-    - We've written the first draft of the code for basic parsing of expressions and laws in Parser.hs, and have an empty derivation function in Derivation.hs.
+    - We've written the first draft of the code for basic parsing of expressions and laws in Parser.hs, and have an empty derivation function in Derivation.hs. Eventually, we'd like to read laws from a file, and read expressions from user input.
 
 Future plans:
     - Finishing touches on parsing code (week 1)

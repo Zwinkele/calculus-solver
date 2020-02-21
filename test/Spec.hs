@@ -8,7 +8,7 @@ import Test.Tasty
 import Test.Tasty.HUnit
 
 main :: IO ()
-main = defaultMain (testGroup "All Tests" [expressionParsingTests, lawParsingTests])
+main = defaultMain (testGroup "All Tests" [expressionParsingTests, lawParsingTests, calculationTests])
 
 expressionParsingTests = testGroup "Expression Parsing Tests" [ept1, ept2, ept3]
 ept1 = testCase "f(x)" 
@@ -45,3 +45,9 @@ lpt1 = testCase "commutativity of +"
                     Reference (Variable "b"),
                     Reference (Variable "a")])))
             (parseMaybe law "commutativity of + : a,b : a + b = b + a"))
+
+calculationTests = testGroup "Calculation Tests" [ct1]
+ct1 = testCase "empty calculation of x"
+        (assertEqual ""
+            (Calc (Reference (Variable "x")) [])
+            (calculate (Reference (Variable "x"))))
