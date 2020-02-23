@@ -20,9 +20,8 @@ ept1 = testCase "f(x)"
 ept2 = testCase "1+2+3"
         (assertEqual ""
             (Just (ACOperation Add [
-                ACOperation Add [
-                    (Constant 1), 
-                    (Constant 2)], 
+                (Constant 1), 
+                (Constant 2),
                 (Constant 3)]))
             (parseMaybe expression "1+2+3"))
 ept3 = testCase "d/dz(z^2)"

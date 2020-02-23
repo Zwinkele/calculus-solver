@@ -44,9 +44,15 @@ ref = do {v <- var;
           return (Reference v)}
 
 minExpr a = mulExpr (Constant (-1)) a
-addExpr a b = ACOperation Add [a, b]
+addExpr (ACOperation Add as) (ACOperation Add bs) = ACOperation Add (as++bs)
+addExpr (ACOperation Add as) b = ACOperation Add (as++[b])
+addExpr a (ACOperation Add bs) = ACOperation Add (a:bs)
+addExpr a b = ACOperation Add [a,b]
 subExpr a b = BinaryOperation Sub a b
-mulExpr a b = ACOperation Mul [a, b]
+mulExpr (ACOperation Mul as) (ACOperation Mul bs) = ACOperation Mul (as++bs)
+mulExpr (ACOperation Mul as) b = ACOperation Mul (as++[b])
+mulExpr a (ACOperation Mul bs) = ACOperation Mul (a:bs)
+mulExpr a b = ACOperation Mul [a,b]
 divExpr a b = BinaryOperation Div a b
 powExpr a b = BinaryOperation Pow a b
 
