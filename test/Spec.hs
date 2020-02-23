@@ -33,8 +33,8 @@ ept3 = testCase "d/dz(z^2)"
                     (Constant 2))))
             (parseMaybe expression "d/dz(z^2)"))
 
-lawParsingTests = testGroup "Law Parsing Tests" [lpt1]
-lpt1 = testCase "commutativity of +"
+lawParsingTests = testGroup "Law Parsing Tests" [lpt1, lpt2]
+lpt1 = testCase "parsing laws from strings"
         (assertEqual ""
             (Just (Law "commutativity of +" [Variable "a", Variable "b"] 
                 (ACOperation Add [
@@ -44,6 +44,16 @@ lpt1 = testCase "commutativity of +"
                     Reference (Variable "b"),
                     Reference (Variable "a")])))
             (parseMaybe law "commutativity of + : a,b : a + b = b + a"))
+lpt2 = testCase "reading laws from a file" 
+        (do {laws <- (readLaws "test/laws.txt");
+            assertBool "" (laws ==
+                [(Just (Law "commutativity of +" [Variable "a", Variable "b"] 
+                (ACOperation Add [
+                    Reference (Variable "a"),
+                    Reference (Variable "b")],
+                ACOperation Add [
+                    Reference (Variable "b"),
+                    Reference (Variable "a")])))])})
 
 calculationTests = testGroup "Calculation Tests" [ct1]
 ct1 = testCase "empty calculation of x"

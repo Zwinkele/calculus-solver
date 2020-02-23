@@ -1,0 +1,3 @@
+sum rule : a,b,x : d/dx(a+b) = d/dx(a) + d/dx(b)
+product rule : a,b,x : d/dx(a*b) = d/dx(a) * b + a * d/dx(b)
+quotient rule : a,b,x : d/dx(a/b) = (d/dx(a) * b - a * d/dx(b))/(b^2)
