@@ -70,7 +70,7 @@ match pattern vars exp =
             else Nothing
         (ACOperation op exps, ACOperation op' exps') -> 
             if op == op'
-            then fmap concat (sequence (map (\(a,b) -> match a vars b) (zip exps exps')))
+            then matchACOp op exps vars exps'
             else Nothing
         (Application v innerPattern, Application v' innerExp) ->
             if v == v'
@@ -81,6 +81,12 @@ match pattern vars exp =
             then match innerPattern vars innerExp
             else Nothing
         (_, _) -> Nothing
+
+matchACOp :: ACOp -> [Expression] -> [Variable] -> [Expression] -> Maybe Substitution
+matchACOp op (exp:[]) vars (exp':[]) = match exp vars exp'
+matchACOp op (exp:[]) vars exps' = match exp vars (ACOperation op exps')
+matchACOp op (exp:exps) vars (exp':exps') = (++) <$> (match exp vars exp') <*> (matchACOp op exps vars exps')
+matchACOp _ _ _ _ = Nothing
 
 apply :: Substitution -> Expression -> Expression
 apply sub replacement = 

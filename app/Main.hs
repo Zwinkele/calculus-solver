@@ -2,8 +2,10 @@ module Main where
 
 import Parser
 import Derivation
+import Structures
+import Printer
 
-import Text.Pretty.Simple (pPrint)
+import Text.Pretty.Simple
 
 main :: IO ()
 main = do 

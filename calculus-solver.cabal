@@ -30,6 +30,7 @@ library
       Structures
     , Parser
     , Derivation
+    , Printer
   other-modules:
       Paths_calculus_solver
   hs-source-dirs:

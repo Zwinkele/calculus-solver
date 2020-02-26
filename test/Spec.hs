@@ -1,6 +1,7 @@
 import Structures
 import Parser
 import Derivation
+import Printer
 
 import Text.Megaparsec
 import Data.MultiSet
@@ -44,17 +45,17 @@ lpt1 = testCase "parsing laws from strings"
                     Reference (Variable "b"),
                     Reference (Variable "a")])))
             (parseMaybe law "commutativity of + : a,b : a + b = b + a"))
--- lpt2 = testCase "reading laws from a file" 
---         (do {laws <- (readLaws "test/laws.txt");
---             assertBool "" (laws ==
---                 (Just [
---                     (Law "commutativity of +" [Variable "a", Variable "b"] 
---                         ACOperation Add [
---                             Reference (Variable "a"),
---                             Reference (Variable "b")],
---                         ACOperation Add [
---                             Reference (Variable "b"),
---                             Reference (Variable "a")])]))})
+lpt2 = testCase "reading laws from a file" 
+        (do {laws <- (readLaws "test/laws.txt");
+            assertBool "" (laws ==
+                (Just [
+                    (Law "commutativity of +" [Variable "a", Variable "b"] 
+                        ACOperation Add [
+                            Reference (Variable "a"),
+                            Reference (Variable "b")],
+                        ACOperation Add [
+                            Reference (Variable "b"),
+                            Reference (Variable "a")])]))})
 
 rewritingTests = testGroup "Rewriting Tests" [rwt1, rwt2]
 rwt1 = testCase "d/dx(4-3) = d/dx(4)-d/dx(3)"
