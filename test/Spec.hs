@@ -8,9 +8,7 @@ import Test.Tasty
 import Test.Tasty.HUnit
 
 main :: IO ()
--- main = parseTest expression "1*(2*3) + (1*2)*3 + 1*2*3"
--- main = do { laws <- (readLaws "src/laws.txt"); putStrLn (show laws)}
-main = defaultMain (testGroup "All Tests" [expressionParsingTests, lawParsingTests, calculationTests])
+main = defaultMain (testGroup "All Tests" [expressionParsingTests, lawParsingTests, rewritingTests])
 
 expressionParsingTests = testGroup "Expression Parsing Tests" [ept1, ept2, ept3]
 ept1 = testCase "f(x)" 
@@ -58,15 +56,15 @@ lpt1 = testCase "parsing laws from strings"
 --                             Reference (Variable "b"),
 --                             Reference (Variable "a")])]))})
 
-calculationTests = testGroup "Calculation Tests" [ct1]
-ct1 = testCase "d/dx(4-3) = d/dx(4)-d/dx(3)"
+rewritingTests = testGroup "Rewriting Tests" [rwt1, rwt2]
+rwt1 = testCase "d/dx(4-3) = d/dx(4)-d/dx(3)"
         (assertEqual ""
             (Just (Step "test law" 
                 (BinaryOperation Sub 
                     (Derivative (Variable "x") (Constant 4)) 
                     (Derivative (Variable "x") (Constant 3)))))
             (rewrite 
-                (Law "test law" []
+                (Law "test law" [Variable "a", Variable "b"]
                     (Derivative (Variable "x")
                         (BinaryOperation Sub 
                             (Reference (Variable "a"))
@@ -76,3 +74,12 @@ ct1 = testCase "d/dx(4-3) = d/dx(4)-d/dx(3)"
                         (Derivative (Variable "x") (Reference (Variable "b"))))))
                 (Derivative (Variable "x")
                     (BinaryOperation Sub (Constant 4) (Constant 3)))))
+rwt2 = testCase "substitution x=5"
+        (assertEqual ""
+            (Just (Step "test law" 
+                (Constant 5)))
+            (rewrite 
+                (Law "test law" []
+                    (Reference (Variable "x"),
+                    Constant 5))
+                (Reference (Variable "x"))))

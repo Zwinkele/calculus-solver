@@ -28,4 +28,4 @@ data Calculation = Calc Expression [Step]
 data Step = Step String Expression
     deriving (Eq, Ord, Show)
 
-type Substitution = [(String, Expression)]
+type Substitution = [(Variable, Expression)]

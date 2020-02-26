@@ -1,6 +1,9 @@
 module Derivation where
 
 import Structures
+import Control.Monad
+import Data.Maybe
+import Data.List
 
 calculate :: [Law] -> Expression -> Calculation
 calculate laws exp = Calc exp (calculateSteps laws exp)
@@ -13,23 +16,12 @@ calculateSteps laws exp =
     where s = step laws exp
 
 step :: [Law] -> Expression -> Maybe Step
-step [] exp = Nothing
-step (law:laws) exp = case e of
-                        Nothing -> step laws exp
-                        _ -> e
-                    where e = rewrite law exp
+step laws exp = join (find isJust (map (\law -> rewrite law exp) laws))
 
 rewrite :: Law -> Expression -> Maybe Step
 rewrite (Law name vars (pattern, replacement)) exp = 
-    case newExp of
-        Nothing -> Nothing
-        (Just newExp') -> Just (Step name newExp')
-        where newExp = findMatch f exp
-              f exp = case substitution of 
-                    Nothing -> Nothing
-                    (Just sub) -> Just (apply sub replacement)
-                    where substitution = match pattern vars exp
-        
+    fmap (\newExp -> Step name newExp) (findMatch f exp)
+        where f exp = fmap (\sub -> apply sub replacement) (match pattern vars exp)
 
 findMatch :: (Expression -> Maybe Expression) -> Expression -> Maybe Expression
 findMatch f exp =
@@ -38,24 +30,12 @@ findMatch f exp =
             Constant n -> Nothing
             Reference var -> Nothing
             BinaryOperation op exp1 exp2 -> case match1 of
-                Nothing -> case match2 of
-                    Nothing -> Nothing
-                    (Just matchedExp) -> Just (BinaryOperation op exp1 matchedExp)
-                    where match2 = findMatch f exp2
+                Nothing -> fmap (\matchedExp -> BinaryOperation op exp1 matchedExp) (findMatch f exp2)
                 (Just matchedExp) -> Just (BinaryOperation op matchedExp exp2)
                 where match1 = findMatch f exp1
-            ACOperation op exps -> case matchedList of
-                Nothing -> Nothing
-                (Just newExps) -> Just (ACOperation op newExps)
-                where matchedList = matchList f exps
-            Application v exp' -> case match1 of
-                Nothing -> Nothing
-                (Just newExp) -> Just (Application v newExp)
-                where match1 = f exp'
-            Derivative v exp' -> case match1 of
-                Nothing -> Nothing
-                (Just newExp) -> Just (Derivative v newExp)
-                where match1 = f exp'
+            ACOperation op exps -> fmap (ACOperation op) (matchList f exps)
+            Application v exp' -> fmap (Application v) (f exp')
+            Derivative v exp' -> fmap (Derivative v) (f exp')
         _ -> e
         where e = f exp
 
@@ -63,11 +43,7 @@ matchList :: (Expression -> Maybe Expression) -> [Expression] -> Maybe [Expressi
 matchList f [] = Nothing
 matchList f (exp:exps) = 
     case match of
-        Nothing -> 
-            case matchedList of
-                Nothing -> Nothing
-                (Just ml) -> Just (exp:ml)
-            where matchedList = matchList f exps
+        Nothing -> fmap (exp:) (matchList f exps)
         (Just newExp) -> Just (newExp:exps)
     where match = f exp
 
@@ -79,20 +55,27 @@ match pattern vars exp =
         Constant n -> case exp of
             Constant m -> if m == n then (Just []) else Nothing
             _ -> Nothing
-        Reference (Variable name) -> Just [(name, exp)]
+        Reference v -> 
+            if v `elem` vars
+            then Just [(v, exp)]
+            else case exp of
+                Reference v' ->
+                    if v == v'
+                    then (Just [])
+                    else Nothing
+                _ -> Nothing
         BinaryOperation op exp1 exp2 -> case exp of
             BinaryOperation op' exp1' exp2' -> 
-                if (op == op') && (matchExp1 /= Nothing) && (matchExp2 /= Nothing)
-                then (++) <$> matchExp1 <*> matchExp2
+                if (op == op')
+                then (++) <$> (match exp1 vars exp1') <*> (match exp2 vars exp2')
                 else Nothing
-                where matchExp1 = match exp1 vars exp1'
-                      matchExp2 = match exp2 vars exp2'
+            _ -> Nothing
         ACOperation op exps -> case exp of
             ACOperation op' exps' ->
                 if op == op'
-                then matchExps
+                then fmap concat (sequence (map (\(a,b) -> match a vars b) (zip exps exps')))
                 else Nothing
-                where matchExps = fmap concat (sequence (map (\(a,b) -> match a vars b) (zip exps exps')))
+            _ -> Nothing
         Application v innerPattern -> case exp of
             Application v' innerExp ->
                 if v == v'
@@ -118,7 +101,7 @@ apply sub replacement =
 
 subVariable :: Substitution -> Variable -> Expression
 subVariable [] v = Reference v
-subVariable ((varName,exp):restOfSubs) v@(Variable name) =
-    if varName == name
+subVariable ((v',exp):restOfSubs) v =
+    if v == v'
     then exp
     else subVariable restOfSubs v
