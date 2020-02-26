@@ -47,15 +47,15 @@ matchList f (exp:exps) =
         (Just newExp) -> Just (newExp:exps)
     where match = f exp
 
-
 -- returns a substitution if the top-level expression matches the pattern
 match :: Expression -> [Variable] -> Expression -> Maybe Substitution
 match pattern vars exp = 
-    case pattern of
-        Constant n -> case exp of
-            Constant m -> if m == n then (Just []) else Nothing
-            _ -> Nothing
-        Reference v -> 
+    case (pattern, exp) of
+        (Constant n, Constant m) ->
+            if m == n
+            then (Just [])
+            else Nothing
+        (Reference v, _) -> 
             if v `elem` vars
             then Just [(v, exp)]
             else case exp of
@@ -64,30 +64,23 @@ match pattern vars exp =
                     then (Just [])
                     else Nothing
                 _ -> Nothing
-        BinaryOperation op exp1 exp2 -> case exp of
-            BinaryOperation op' exp1' exp2' -> 
-                if (op == op')
-                then (++) <$> (match exp1 vars exp1') <*> (match exp2 vars exp2')
-                else Nothing
-            _ -> Nothing
-        ACOperation op exps -> case exp of
-            ACOperation op' exps' ->
-                if op == op'
-                then fmap concat (sequence (map (\(a,b) -> match a vars b) (zip exps exps')))
-                else Nothing
-            _ -> Nothing
-        Application v innerPattern -> case exp of
-            Application v' innerExp ->
-                if v == v'
-                then match innerPattern vars innerExp
-                else Nothing
-            _ -> Nothing
-        Derivative v innerPattern -> case exp of
-            Derivative v' innerExp ->
-                if v == v'
-                then match innerPattern vars innerExp
-                else Nothing
-            _ -> Nothing
+        (BinaryOperation op exp1 exp2, BinaryOperation op' exp1' exp2') ->
+            if (op == op')
+            then (++) <$> (match exp1 vars exp1') <*> (match exp2 vars exp2')
+            else Nothing
+        (ACOperation op exps, ACOperation op' exps') -> 
+            if op == op'
+            then fmap concat (sequence (map (\(a,b) -> match a vars b) (zip exps exps')))
+            else Nothing
+        (Application v innerPattern, Application v' innerExp) ->
+            if v == v'
+            then match innerPattern vars innerExp
+            else Nothing
+        (Derivative v innerPattern, Derivative v' innerExp) ->
+            if v == v'
+            then match innerPattern vars innerExp
+            else Nothing
+        (_, _) -> Nothing
 
 apply :: Substitution -> Expression -> Expression
 apply sub replacement = 

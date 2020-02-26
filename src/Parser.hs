@@ -7,6 +7,7 @@ import Text.Megaparsec.Char.Lexer hiding (binary, space)
 import Control.Monad.Combinators
 import Control.Monad.Combinators.Expr
 import Data.Void
+import Data.Maybe
 
 type Parser = Parsec Void String
 
@@ -82,6 +83,9 @@ equation = do {lhs <- expression;
                rhs <- expression;
                return (lhs, rhs)}
 
-readLaws :: String -> IO (Maybe [Law])
+parseExpression :: String -> Expression
+parseExpression s = fromJust (parseMaybe expression s)
+
+readLaws :: String -> IO ([Law])
 readLaws location = do {text <- readFile location;
-                        return (sequence (map (parseMaybe law) (lines text)))}
+                        return (catMaybes (map (parseMaybe law) (lines text)))}
