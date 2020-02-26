@@ -82,6 +82,6 @@ equation = do {lhs <- expression;
                rhs <- expression;
                return (lhs, rhs)}
 
-readLaws :: String -> IO ([Maybe Law])
+readLaws :: String -> IO (Maybe [Law])
 readLaws location = do {text <- readFile location;
-                        return (map (parseMaybe law) (lines text))}
+                        return (sequence (map (parseMaybe law) (lines text)))}

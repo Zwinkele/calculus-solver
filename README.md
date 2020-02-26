@@ -2,11 +2,13 @@
 
 Current progress:
     - The data structures that we expect to need for the project are in Structures.hs.
-    - We've written the first draft of the code for basic parsing of expressions and laws in Parser.hs, and have an empty derivation function in Derivation.hs. Eventually, we'd like to read laws from a file, and read expressions from user input.
+    - Parsing of expressions and laws is implemented in Parser.hs, and we also have a function to read laws from a .txt file.
+    - Derivation.hs has the first draft of our code to produce calculations. We're not really happy with how messy it is; ideally we would take advantage of the monadic structure of Maybe and List to make it a bit less verbose. We plan to implement special logic for the laws d/dx(constant)=0 and d/dx(x)=1. We also will need special logic for dealing with constants like 2x-2x=0 or 1+2=3
 
 Future plans:
-    - Finishing touches on parsing code (week 1)
     - Reasoning (week 2)
+        - Clean up derivation code
+        - Implement special cases
     - Special feature (week 3)
         - Possible idea: LaTeX output!
 
@@ -19,3 +21,4 @@ Details we've considered:
     - Unsure what d/dx(y) should be.
         - Possible solution: Treat non-x variables as constants unless they're functions, so d/dx(y) = 0, but d/dx(y(x)) = y'(x).
     - Do we want to give up on input like d/dx(x^x) or should we add arbitrary powers and logarithms?
+        - Solution: We're adding powers to the structure, logarithms can be defined in laws.txt.
