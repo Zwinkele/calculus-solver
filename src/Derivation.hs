@@ -113,7 +113,7 @@ subForVar (_:restOfSubs) v = subForVar restOfSubs v
 
 
 simplify :: Calculation -> Calculation
-simplify calc = simplifyStep calc "Simplify" (convertSubtraction . simplifyDerivatives . simplifyConstMath . unwrapACOp)
+simplify calc = simplifyStep calc "Simplify" (combineACOp . convertSubtraction . simplifyDerivatives . simplifyConstMath . unwrapACOp)
     --simplifyStep (simplifyStep calc "Simplify Derivatives" simplifyDerivatives) "Simplify Constant Math" simplifyConstMath 
 
 -- Creates a simplification step using a simplifying function
@@ -151,6 +151,22 @@ unwrapACOp (BinaryOperation op exp1 exp2) = BinaryOperation op (unwrapACOp exp1)
 unwrapACOp (ACOperation op exps) = ACOperation op (map unwrapACOp exps)
 unwrapACOp (Application v exp) = Application v (unwrapACOp exp)
 unwrapACOp (Derivative v exp) = Derivative v (unwrapACOp exp)
+
+-- Combine nested ACOperations
+combineACOp :: Expression -> Expression
+combineACOp (Constant n) = Constant n
+combineACOp (Reference v) = Reference v
+combineACOp (BinaryOperation op exp1 exp2) = BinaryOperation op (combineACOp exp1) (combineACOp exp2)
+combineACOp exp@(ACOperation op exps) = ACOperation op (accumACOpExprs op [] exp)
+combineACOp (Application v exp) = Application v (combineACOp exp)
+combineACOp (Derivative v exp) = Derivative v (combineACOp exp)
+
+accumACOpExprs :: ACOp -> [Expression] -> Expression -> [Expression]
+accumACOpExprs op accum exp@(ACOperation op' exps)= 
+    if op == op'
+    then (concatMap (accumACOpExprs op accum) exps)
+    else (combineACOp exp):accum
+accumACOpExprs op accum exp = exp:accum
 
 -- Simplifying expression for d/dx(x) = 1 and d/dx(constant) = 0 
 simplifyDerivatives :: Expression -> Expression
