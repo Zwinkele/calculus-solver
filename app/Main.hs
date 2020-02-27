@@ -14,6 +14,6 @@ main = do
         putStrLn "Enter an expression:";
         expString <- getLine
         let exp = parseExpression expString
-            calc = calculate laws exp
+            calc = simplify (calculate laws exp)
         pPrint calc
 

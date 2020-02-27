@@ -110,3 +110,91 @@ subForVar ((v', Reference v''):restOfSubs) v =
     then v''
     else subForVar restOfSubs v
 subForVar (_:restOfSubs) v = subForVar restOfSubs v
+
+
+simplify :: Calculation -> Calculation
+simplify calc = simplifyStep calc "Simplify" (convertSubtraction . simplifyDerivatives . simplifyConstMath . unwrapACOp)
+    --simplifyStep (simplifyStep calc "Simplify Derivatives" simplifyDerivatives) "Simplify Constant Math" simplifyConstMath 
+
+-- Creates a simplification step using a simplifying function
+simplifyStep :: Calculation -> String -> (Expression -> Expression) -> Calculation
+simplifyStep (Calc exp steps) stepName simplifyFunc = Calc exp (steps ++ [Step stepName (simplifyFuncRepeat simplifyFunc (getExpFromStep (last steps)))])
+
+getExpFromStep :: Step -> Expression
+getExpFromStep (Step s exp) = exp
+
+-- Repeatedly call the simplifyFunc until nothing changes
+simplifyFuncRepeat :: (Expression -> Expression) -> Expression -> Expression
+simplifyFuncRepeat simplifyFunc exp =
+    if exp /= newExp
+        then simplifyFuncRepeat simplifyFunc newExp
+        else exp
+    where newExp = simplifyFunc exp
+
+-- Simplifying expression to convert subtraction to adding a negative
+convertSubtraction :: Expression -> Expression 
+convertSubtraction (BinaryOperation Sub e1@(ACOperation Add exps1) e2) = ACOperation Add (exps1 ++ [ACOperation Mul [(Constant (negate 1)), e2]])
+convertSubtraction (BinaryOperation Sub e1 e2) = ACOperation Add [e1, ACOperation Mul [(Constant (negate 1)), e2]]
+convertSubtraction (Constant n) = Constant n
+convertSubtraction (Reference v) = Reference v
+convertSubtraction (BinaryOperation op exp1 exp2) = BinaryOperation op (convertSubtraction exp1) (convertSubtraction exp2)
+convertSubtraction (ACOperation op exps) = ACOperation op (map convertSubtraction exps)
+convertSubtraction (Application v exp) = Application v (convertSubtraction exp)
+convertSubtraction (Derivative v exp) = Derivative v (convertSubtraction exp)
+
+-- Simplifying expression to unwrap ACOperations that only have one expression in the expression list
+unwrapACOp :: Expression -> Expression
+unwrapACOp (ACOperation op (exp:[])) = unwrapACOp exp
+unwrapACOp (Constant n) = Constant n
+unwrapACOp (Reference v) = Reference v
+unwrapACOp (BinaryOperation op exp1 exp2) = BinaryOperation op (unwrapACOp exp1) (unwrapACOp exp2)
+unwrapACOp (ACOperation op exps) = ACOperation op (map unwrapACOp exps)
+unwrapACOp (Application v exp) = Application v (unwrapACOp exp)
+unwrapACOp (Derivative v exp) = Derivative v (unwrapACOp exp)
+
+-- Simplifying expression for d/dx(x) = 1 and d/dx(constant) = 0 
+simplifyDerivatives :: Expression -> Expression
+simplifyDerivatives (Constant n) = Constant n
+simplifyDerivatives (Reference v) = Reference v
+simplifyDerivatives (BinaryOperation op exp1 exp2) = BinaryOperation op (simplifyDerivatives exp1) (simplifyDerivatives exp2)
+simplifyDerivatives (ACOperation op exps) = ACOperation op (map simplifyDerivatives exps)
+simplifyDerivatives (Application v exp) = Application v (simplifyDerivatives exp)
+simplifyDerivatives d@(Derivative v (Reference w)) = if v == w then (Constant 1) else d
+simplifyDerivatives (Derivative v (Constant n)) = Constant 0
+simplifyDerivatives (Derivative v exp) = Derivative v (simplifyDerivatives exp)
+
+-- Simplifying function for basic math (+,-,*,^)
+simplifyConstMath :: Expression -> Expression
+simplifyConstMath (Constant n) = Constant n
+simplifyConstMath (Reference v) = Reference v
+simplifyConstMath e@(BinaryOperation op (Constant n) (Constant m)) = 
+    case op of
+        Sub -> Constant (n-m)
+        Pow -> Constant (n^m)
+        Div -> e
+simplifyConstMath (BinaryOperation op exp1 exp2) = BinaryOperation op (simplifyConstMath exp1) (simplifyConstMath exp2)
+simplifyConstMath (ACOperation Add exps) = ACOperation Add (simplifyACOp Add exps 0)
+simplifyConstMath (ACOperation Mul exps) = if (Constant 0) `elem` exps then (Constant 0) else ACOperation Mul (simplifyACOp Mul exps 1)
+simplifyConstMath (Application v exp) = Application v (simplifyConstMath exp)
+simplifyConstMath (Derivative v exp) = Derivative v (simplifyConstMath exp)
+
+-- Helper function to simplify constants in ACOperations
+simplifyACOp :: ACOp -> [Expression] -> Int -> [Expression]
+simplifyACOp op [] accum = 
+    case op of
+        Add -> if accum /= 0 then [Constant accum] else []
+        Mul -> if accum /= 1 then [Constant accum] else []
+simplifyACOp op (exp:exps) accum =
+    case exp of
+        Constant n -> 
+            case op of
+                Mul -> if n == 0 then [Constant 0] else simplifyACOp op exps (evalACOpConsts op n accum)
+                Add -> simplifyACOp op exps (evalACOpConsts op n accum)
+        _ -> (simplifyConstMath exp):(simplifyACOp op exps accum)
+
+-- Helper funciton to evaluate ACOperation of 2 integers
+evalACOpConsts :: ACOp -> Int -> Int -> Int
+evalACOpConsts op n m =
+    case op of
+        Add -> n + m
+        Mul -> n * m
