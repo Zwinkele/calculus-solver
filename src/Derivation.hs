@@ -90,15 +90,23 @@ apply :: Substitution -> Expression -> Expression
 apply sub replacement = 
     case replacement of
         Constant n -> Constant n
-        Reference v -> subVariable sub v
+        Reference v -> subForExpr sub v
         BinaryOperation op exp1 exp2 -> BinaryOperation op (apply sub exp1) (apply sub exp2)
         ACOperation op exps -> ACOperation op (map (apply sub) exps)
         Application v exp -> Application v (apply sub exp)
-        Derivative v exp -> Derivative v (apply sub exp)
+        Derivative v exp -> Derivative (subForVar sub v) (apply sub exp)
 
-subVariable :: Substitution -> Variable -> Expression
-subVariable [] v = Reference v
-subVariable ((v',exp):restOfSubs) v =
+subForExpr :: Substitution -> Variable -> Expression
+subForExpr [] v = Reference v
+subForExpr ((v',exp):restOfSubs) v =
     if v == v'
     then exp
-    else subVariable restOfSubs v
+    else subForExpr restOfSubs v
+
+subForVar :: Substitution -> Variable -> Variable
+subForVar [] v = v
+subForVar ((v', Reference v''):restOfSubs) v =
+    if v == v'
+    then v''
+    else subForVar restOfSubs v
+subForVar (_:restOfSubs) v = subForVar restOfSubs v

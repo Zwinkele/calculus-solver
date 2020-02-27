@@ -25,10 +25,10 @@ expToString exp = case exp of
     Application (Variable varName) exp' -> varName ++ "(" ++ (expToString exp') ++ ")"
     Derivative (Variable varName) exp' -> "d/d" ++ varName ++ "(" ++ (expToString exp') ++ ")"
 
--- instance Show Expression where
---     show = expToString
+instance Show Expression where
+    show = expToString
 
-deriving instance Show Expression
+-- deriving instance Show Expression
 
 deriving instance Show Step
 
