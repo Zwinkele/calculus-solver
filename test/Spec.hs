@@ -3,10 +3,11 @@ import Parser
 import Derivation
 import Printer
 
-import Text.Megaparsec
+import Text.Megaparsec hiding (match)
 import Data.MultiSet
 import Test.Tasty
 import Test.Tasty.HUnit
+import Data.Maybe
 
 main :: IO ()
 main = defaultMain (testGroup "All Tests" [expressionParsingTests, lawParsingTests, rewritingTests])
@@ -48,14 +49,14 @@ lpt1 = testCase "parsing laws from strings"
 lpt2 = testCase "reading laws from a file" 
         (do {laws <- (readLaws "test/laws.txt");
             assertBool "" (laws ==
-                (Just [
+                ([
                     (Law "commutativity of +" [Variable "a", Variable "b"] 
-                        ACOperation Add [
+                        (ACOperation Add [
                             Reference (Variable "a"),
                             Reference (Variable "b")],
                         ACOperation Add [
                             Reference (Variable "b"),
-                            Reference (Variable "a")])]))})
+                            Reference (Variable "a")]))]))})
 
 rewritingTests = testGroup "Rewriting Tests" [rwt1, rwt2]
 rwt1 = testCase "d/dx(4-3) = d/dx(4)-d/dx(3)"
@@ -84,3 +85,33 @@ rwt2 = testCase "substitution x=5"
                     (Reference (Variable "x"),
                     Constant 5))
                 (Reference (Variable "x"))))
+
+-- some test data
+expr = ACOperation Add exps
+exp1 = ACOperation Mul [
+            Derivative (Variable "x") (
+                Reference (Variable "a")),
+            Reference (Variable "b"),
+            Reference (Variable "c")]
+exp2 = ACOperation Mul [
+            Reference (Variable "a"),
+            Derivative (Variable "x") (
+                ACOperation Mul [
+                    Reference (Variable "b"),
+                    Reference (Variable "c")])]
+exps = [exp1, exp2]
+pattern = Derivative (Variable "x") (
+        ACOperation Mul [
+            Reference (Variable "a"),
+            Reference (Variable "b")])
+vars = [Variable "a",Variable "b",Variable "x"]
+replacement = ACOperation Add [
+        ACOperation Mul [
+            Derivative (Variable "x") (
+                Reference (Variable "a")),
+            Reference (Variable "b")],
+        ACOperation Mul [
+            Reference (Variable "a"),
+            Derivative (Variable "x") (
+                Reference (Variable "b"))]]
+productRule = Law "product rule" vars (pattern, replacement)

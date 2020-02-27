@@ -45,7 +45,7 @@ matchList f (exp:exps) =
     case match of
         Nothing -> fmap (exp:) (matchList f exps)
         (Just newExp) -> Just (newExp:exps)
-    where match = f exp
+    where match = findMatch f exp
 
 -- returns a substitution if the top-level expression matches the pattern
 match :: Expression -> [Variable] -> Expression -> Maybe Substitution

@@ -8,6 +8,10 @@ Current progress:
 
     - Derivation.hs has the first draft of our code to produce calculations. We're not really happy with how messy it is; ideally we would take advantage of the monadic structure of Maybe and List to make it a bit less verbose. We plan to implement special logic for the laws d/dx(constant)=0 and d/dx(x)=1. We also will need special logic for dealing with constants like 2x-2x=0 or 1+2=3.
 
+Hardcoded logic:
+    - d/dx(x) = 1
+    - d/dx(int) = 0
+    - all math w/ constants and +,-,*,^
 
 
 Future plans:
