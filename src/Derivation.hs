@@ -77,9 +77,7 @@ match pattern vars exp =
             then match innerPattern vars innerExp
             else Nothing
         (Derivative v innerPattern, Derivative v' innerExp) ->
-            if v == v'
-            then match innerPattern vars innerExp
-            else Nothing
+            pure ((v, (Reference v')):) <*> (match innerPattern vars innerExp)
         (_, _) -> Nothing
 
 matchACOp :: ACOp -> [Expression] -> [Variable] -> [Expression] -> Maybe Substitution
