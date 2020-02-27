@@ -111,9 +111,12 @@ subForVar ((v', Reference v''):restOfSubs) v =
     else subForVar restOfSubs v
 subForVar (_:restOfSubs) v = subForVar restOfSubs v
 
+-- Composition of simplification functions
+simplifyFunc :: Expression -> Expression
+simplifyFunc = unwrapACOp . simplifyConstMath . simplifyDerivatives . convertSubtraction . combineACOp
 
 simplify :: Calculation -> Calculation
-simplify calc = simplifyStep calc "Simplify" (combineACOp . convertSubtraction . simplifyDerivatives . simplifyConstMath . unwrapACOp)
+simplify calc = simplifyStep calc "Simplify" simplifyFunc
     --simplifyStep (simplifyStep calc "Simplify Derivatives" simplifyDerivatives) "Simplify Constant Math" simplifyConstMath 
 
 -- Creates a simplification step using a simplifying function
