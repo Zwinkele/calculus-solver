@@ -1,7 +1,13 @@
 sum rule : a,b,x : d/dx(a+b) = d/dx(a) + d/dx(b)
 product rule : a,b,x : d/dx(a*b) = d/dx(a) * b + a * d/dx(b)
 quotient rule : a,b,x : d/dx(a/b) = (d/dx(a) * b - a * d/dx(b))/(b^2)
-sin rule : a,x : d/dx(sin(a)) = cos(a) * d/dx(a)
-cos rule : a,x : d/dx(cos(a)) = -sin(a) * d/dx(a)
-ln rule : a,x : d/dx(ln(a)) = 1/a * d/dx(a)
+sine rule : a,x : d/dx(sin(a)) = cos(a) * d/dx(a)
+angle sum formula for sine : a,b : sin(a+b) = sin(a)*cos(b) + cos(a)*sin(b)
+cosine rule : a,x : d/dx(cos(a)) = -sin(a) * d/dx(a)
+angle sum formula for cosine : a,b : cos(a+b) = cos(a)*cos(b) - sin(a)*sin(b)
 power rule : a,b,x : d/dx(a^b) = a^b * d/dx(b * ln(a))
+ln rule : a,x : d/dx(ln(a)) = 1/a * d/dx(a)
+ln property 1 : : ln(1) = 0
+ln property 2 : : ln(e) = 1
+ln property 3 : a,b : ln(a*b) = ln(a) + ln(b)
+ln property 4 : a,b : ln(a^b) = b * ln(a)
