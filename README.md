@@ -5,23 +5,33 @@ To run our solver, simply use "stack run". It will ask for the user to input an 
     We plan to implement printing to a prettier format during the last week of the project.
     You can also try "stack test" to make sure our tests work, but it won't be very illuminating.
 
+
+
 Current progress:
 
     - The data structures that we expect to need for the project are in Structures.hs.
 
-    - Parsing of expressions and laws is implemented in Parser.hs, and we also have a function to read laws from a .txt file.
+    - Parsing of expressions and laws is implemented in Parser.hs, 
+        and we also have a function to read laws from a .txt file.
 
-    - Derivation.hs has the first draft of our code to produce calculations.
-        We're not really happy with how messy it is; 
-        ideally we would take advantage of the monadic structure of Maybe and List to make it a bit less verbose. 
-        We plan to implement special logic for the laws d/dx(constant)=0 and d/dx(x)=1. 
-        We also will need special logic for dealing with constants like 2x-2x=0 or 1+2=3.
+    - The code for producing calculations from the given laws has been cleaned up a bit in Derivation.hs.
+        We've just recently written functions to apply special rules that aren't able to be specified
+        in laws.txt, like math with constants and d/dx(x)=1.
+        We are still working on completely simplifying expressions to make it imitate 
+        an actual calculus solution better.
+
+
 
 Hardcoded logic:
+
     - d/dx(x) = 1
+
     - d/dx(int) = 0
+
         - more generally, d/dx(anything without an x)=0
+
     - all math w/ constants and +,-,*,^
+
 
 
 Future plans:
