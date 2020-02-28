@@ -4,6 +4,7 @@ import Structures
 import Control.Monad
 import Data.Maybe
 import Data.List
+import Data.Ratio
 
 calculate :: [Law] -> Expression -> Calculation
 calculate laws exp = Calc exp (calculateSteps laws exp)
@@ -195,7 +196,7 @@ simplifyConstMath e@(BinaryOperation op (Constant n) (Constant m)) =
     case op of
         Sub -> Constant (n-m)
         Pow -> Constant (n^m)
-        Div -> e
+        Div -> simplifyFrac n m
 simplifyConstMath (BinaryOperation op exp1 exp2) = BinaryOperation op (simplifyConstMath exp1) (simplifyConstMath exp2)
 simplifyConstMath (ACOperation Add exps) = 
     case simplified of
@@ -209,6 +210,19 @@ simplifyConstMath (ACOperation Mul exps) =
         where simplified = (simplifyACOp Mul exps 1)
 simplifyConstMath (Application v exp) = Application v (simplifyConstMath exp)
 simplifyConstMath (Derivative v exp) = Derivative v (simplifyConstMath exp)
+
+
+-- Helper to simplify fractions
+simplifyFrac :: Int -> Int -> Expression
+simplifyFrac n d =   if (num) == 0
+                    then Constant 0
+                    else if (denom) == 1
+                    then Constant (num)
+                    else BinaryOperation Div (Constant num) (Constant denom)
+                    where frac = n % d
+                          num = numerator frac
+                          denom = denominator frac
+                    
 
 -- Helper function to simplify constants in ACOperations
 simplifyACOp :: ACOp -> [Expression] -> Int -> [Expression]
