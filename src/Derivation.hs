@@ -178,7 +178,7 @@ simplifyDerivatives (Reference v) = Reference v
 simplifyDerivatives (BinaryOperation op exp1 exp2) = BinaryOperation op (simplifyDerivatives exp1) (simplifyDerivatives exp2)
 simplifyDerivatives (ACOperation op exps) = ACOperation op (map simplifyDerivatives exps)
 simplifyDerivatives (Application v exp) = Application v (simplifyDerivatives exp)
-simplifyDerivatives d@(Derivative v (Reference w)) = if v == w then (Constant 1) else d
+simplifyDerivatives d@(Derivative v (Reference w)) = if v == w then (Constant 1) else (Constant 0)
 simplifyDerivatives (Derivative v (Constant n)) = Constant 0
 simplifyDerivatives (Derivative v exp) = Derivative v (simplifyDerivatives exp)
 
@@ -192,14 +192,22 @@ simplifyConstMath e@(BinaryOperation op (Constant n) (Constant m)) =
         Pow -> Constant (n^m)
         Div -> e
 simplifyConstMath (BinaryOperation op exp1 exp2) = BinaryOperation op (simplifyConstMath exp1) (simplifyConstMath exp2)
-simplifyConstMath (ACOperation Add exps) = ACOperation Add (simplifyACOp Add exps 0)
-simplifyConstMath (ACOperation Mul exps) = if (Constant 0) `elem` exps then (Constant 0) else ACOperation Mul (simplifyACOp Mul exps 1)
+simplifyConstMath (ACOperation Add exps) = 
+    case simplified of
+        [] -> Constant 0
+        _ -> ACOperation Add simplified
+        where simplified = (simplifyACOp Add exps 0)
+simplifyConstMath (ACOperation Mul exps) = 
+    case simplified of
+        [] -> Constant 1
+        _ -> if (Constant 0) `elem` exps then (Constant 0) else ACOperation Mul simplified
+        where simplified = (simplifyACOp Mul exps 1)
 simplifyConstMath (Application v exp) = Application v (simplifyConstMath exp)
 simplifyConstMath (Derivative v exp) = Derivative v (simplifyConstMath exp)
 
 -- Helper function to simplify constants in ACOperations
 simplifyACOp :: ACOp -> [Expression] -> Int -> [Expression]
-simplifyACOp op [] accum = 
+simplifyACOp op [] accum =
     case op of
         Add -> if accum /= 0 then [Constant accum] else []
         Mul -> if accum /= 1 then [Constant accum] else []
