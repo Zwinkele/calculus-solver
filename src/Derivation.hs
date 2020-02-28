@@ -121,7 +121,12 @@ simplify calc = simplifyStep calc "Simplify" simplifyFunc
 
 -- Creates a simplification step using a simplifying function
 simplifyStep :: Calculation -> String -> (Expression -> Expression) -> Calculation
-simplifyStep (Calc exp steps) stepName simplifyFunc = Calc exp (steps ++ [Step stepName (simplifyFuncRepeat simplifyFunc (getExpFromStep (last steps)))])
+simplifyStep c@(Calc exp steps) stepName simplifyFunc = 
+    Calc exp (steps ++ [Step stepName (simplifyFuncRepeat simplifyFunc (finalExpression c))])
+
+finalExpression :: Calculation -> Expression
+finalExpression (Calc exp []) = exp
+finalExpression (Calc exp steps) = getExpFromStep (last steps)
 
 getExpFromStep :: Step -> Expression
 getExpFromStep (Step s exp) = exp
