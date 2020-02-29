@@ -1,9 +1,10 @@
 module Structures where
+import Data.Ratio
 
 data Variable = Variable String
     deriving (Eq, Ord, Show)
 
-data Expression = Constant Int -- 1, 2, 91
+data Expression = Constant Rational -- 8%1, 2%3, 91%7
                 | Reference Variable -- x, y, var
                 | BinaryOperation BinOp Expression Expression -- x-y, 1/x x^2
                 | ACOperation ACOp [Expression] -- a+3+7+3, x*y*x

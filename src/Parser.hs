@@ -8,6 +8,7 @@ import Control.Monad.Combinators
 import Control.Monad.Combinators.Expr
 import Data.Void
 import Data.Maybe
+import Data.Ratio
 
 type Parser = Parsec Void String
 
@@ -22,7 +23,7 @@ term = space *> (parens expression <|> constant <|> derivative <|> try function 
 
 constant :: Parser Expression
 constant = do {n <- some digitChar;
-               return (Constant (read n))}
+               return (Constant ((read n :: Integer)%1))}
            <?> "constant"
 
 derivative :: Parser Expression

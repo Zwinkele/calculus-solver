@@ -225,8 +225,12 @@ simplifyConstMath (Reference v) = Reference v
 simplifyConstMath e@(BinaryOperation op (Constant n) (Constant m)) = 
     case op of
         Sub -> Constant (n-m)
-        Pow -> if m >= 0 then Constant (n^m) else (BinaryOperation Div (Constant 1) (Constant (n^(-1*m))))
-        Div -> simplifyFrac n m
+        Pow -> if ((denominator m) == 1) 
+               then 
+                   if m >= 0 then Constant (n^(numerator m)) 
+                   else (BinaryOperation Div (Constant 1) (Constant (n^(-1*(numerator m)))))
+                else e
+        Div -> Constant (n/m)
 simplifyConstMath (BinaryOperation op exp1 exp2) = BinaryOperation op (simplifyConstMath exp1) (simplifyConstMath exp2)
 simplifyConstMath (ACOperation Add exps) = 
     case simplified of
@@ -240,22 +244,10 @@ simplifyConstMath (ACOperation Mul exps) =
         where simplified = (simplifyACOp Mul exps 1)
 simplifyConstMath (Application v exp) = Application v (simplifyConstMath exp)
 simplifyConstMath (Derivative v exp) = Derivative v (simplifyConstMath exp)
-
-
--- Helper to simplify fractions
-simplifyFrac :: Int -> Int -> Expression
-simplifyFrac n d =   if (num) == 0
-                    then Constant 0
-                    else if (denom) == 1
-                    then Constant (num)
-                    else BinaryOperation Div (Constant num) (Constant denom)
-                    where frac = n % d
-                          num = numerator frac
-                          denom = denominator frac
                     
 
 -- Helper function to simplify constants in ACOperations
-simplifyACOp :: ACOp -> [Expression] -> Int -> [Expression]
+simplifyACOp :: ACOp -> [Expression] -> Rational -> [Expression]
 simplifyACOp op [] accum =
     case op of
         Add -> if accum /= 0 then [Constant accum] else []
@@ -268,8 +260,8 @@ simplifyACOp op (exp:exps) accum =
                 Add -> simplifyACOp op exps (evalACOpConsts op n accum)
         _ -> (simplifyConstMath exp):(simplifyACOp op exps accum)
 
--- Helper funciton to evaluate ACOperation of 2 integers
-evalACOpConsts :: ACOp -> Int -> Int -> Int
+-- Helper funciton to evaluate ACOperation of 2 numbers
+evalACOpConsts :: ACOp -> Rational -> Rational -> Rational
 evalACOpConsts op n m =
     case op of
         Add -> n + m
