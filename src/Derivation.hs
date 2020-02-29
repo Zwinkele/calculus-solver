@@ -5,6 +5,7 @@ import Control.Monad
 import Data.Maybe
 import Data.List
 import Data.Ratio
+import qualified Data.Map.Strict as Map
 
 calculate :: [Law] -> Expression -> Calculation
 calculate laws exp = Calc exp (calculateSteps laws exp)
@@ -113,17 +114,27 @@ subForVar ((v', Reference v''):restOfSubs) v =
 subForVar (_:restOfSubs) v = subForVar restOfSubs v
 
 -- Composition of simplification functions
-simplifyFunc :: Expression -> Expression
-simplifyFunc = unwrapACOp . simplifyConstMath . simplifyDerivatives . convertSubtraction . combineACOp
+simplifyFunc :: Calculation -> Calculation
+simplifyFunc = (simplifyStep "Combine/Simplify like multiplication terms" (combineLikeMulTerms . combineACOp)) .
+               (simplifyStep "Unwrapping ACOperations with single expression" unwrapACOp) . 
+               (simplifyStep "Simplify Constant Math" simplifyConstMath) . 
+               (simplifyStep "Simplify d/dx(x) = 1 and d/dx(constant) = 0" simplifyDerivatives) . 
+               (simplifyStep "combine nested ACOperations" combineACOp)
 
 simplify :: Calculation -> Calculation
-simplify calc = simplifyStep calc "Simplify" simplifyFunc
-    --simplifyStep (simplifyStep calc "Simplify Derivatives" simplifyDerivatives) "Simplify Constant Math" simplifyConstMath 
+simplify calc = 
+    if finalExpression calc /= finalExpression newCalc
+        then simplify newCalc
+        else calc
+    where newCalc = simplifyFunc calc
 
 -- Creates a simplification step using a simplifying function
-simplifyStep :: Calculation -> String -> (Expression -> Expression) -> Calculation
-simplifyStep c@(Calc exp steps) stepName simplifyFunc = 
-    Calc exp (steps ++ [Step stepName (simplifyFuncRepeat simplifyFunc (finalExpression c))])
+simplifyStep :: String -> (Expression -> Expression) -> Calculation -> Calculation
+simplifyStep stepName simplifyFunc c@(Calc exp steps) = 
+    if finalExpression c == finalExpression newCalc
+        then c
+        else newCalc
+    where newCalc = Calc exp (steps ++ [Step stepName (simplifyFuncRepeat simplifyFunc (finalExpression c))])
 
 finalExpression :: Calculation -> Expression
 finalExpression (Calc exp []) = exp
@@ -140,16 +151,35 @@ simplifyFuncRepeat simplifyFunc exp =
         else exp
     where newExp = simplifyFunc exp
 
--- Simplifying expression to convert subtraction to adding a negative
-convertSubtraction :: Expression -> Expression 
-convertSubtraction (BinaryOperation Sub e1@(ACOperation Add exps1) e2) = ACOperation Add (exps1 ++ [ACOperation Mul [(Constant (negate 1)), e2]])
-convertSubtraction (BinaryOperation Sub e1 e2) = ACOperation Add [e1, ACOperation Mul [(Constant (negate 1)), e2]]
-convertSubtraction (Constant n) = Constant n
-convertSubtraction (Reference v) = Reference v
-convertSubtraction (BinaryOperation op exp1 exp2) = BinaryOperation op (convertSubtraction exp1) (convertSubtraction exp2)
-convertSubtraction (ACOperation op exps) = ACOperation op (map convertSubtraction exps)
-convertSubtraction (Application v exp) = Application v (convertSubtraction exp)
-convertSubtraction (Derivative v exp) = Derivative v (convertSubtraction exp)
+combineLikeMulTerms :: Expression -> Expression
+combineLikeMulTerms (Constant n) = Constant n
+combineLikeMulTerms (Reference v) = Reference v
+combineLikeMulTerms (BinaryOperation op exp1 exp2) = BinaryOperation op (combineLikeMulTerms exp1) (combineLikeMulTerms exp2)
+combineLikeMulTerms (ACOperation Add exps) = ACOperation Add (map combineLikeMulTerms exps)
+combineLikeMulTerms (ACOperation Mul exps) = ACOperation Mul (combineMulExps exps [])
+combineLikeMulTerms (Application v exp) = Application v (combineLikeMulTerms exp)
+combineLikeMulTerms (Derivative v exp) = Derivative v (combineLikeMulTerms exp)
+
+combineMulExps :: [Expression] -> [(Expression, Expression)] -> [Expression]
+combineMulExps [] accum = mulExpsAccumToExps (Map.toList (Map.fromListWith addExps accum))
+combineMulExps (exp:exps) accum =
+    case exp of
+        BinaryOperation Pow exp' p -> combineMulExps exps ((exp',p):accum)
+        _ -> combineMulExps exps ((exp, Constant 1):accum)
+
+mulExpsAccumToExps :: [(Expression, Expression)] -> [Expression]
+mulExpsAccumToExps [] = []
+mulExpsAccumToExps ((pair@(exp,p)):pairs)
+    | p == Constant 0 = (Constant 1):(mulExpsAccumToExps pairs)
+    | p == Constant 1 = exp:(mulExpsAccumToExps pairs)
+    | otherwise = (BinaryOperation Pow exp p):(mulExpsAccumToExps pairs)
+    
+
+addExps :: Expression -> Expression -> Expression
+addExps (ACOperation Add exps1) (ACOperation Add exps2) = ACOperation Add (exps1 ++ exps2)
+addExps (ACOperation Add exps1) exp2 = ACOperation Add (exp2:exps1)
+addExps exp1 (ACOperation Add exps2) = ACOperation Add (exp1:exps2)
+addExps exp1 exp2 = ACOperation Add [exp1,exp2]
 
 -- Simplifying expression to unwrap ACOperations that only have one expression in the expression list
 unwrapACOp :: Expression -> Expression
@@ -195,7 +225,7 @@ simplifyConstMath (Reference v) = Reference v
 simplifyConstMath e@(BinaryOperation op (Constant n) (Constant m)) = 
     case op of
         Sub -> Constant (n-m)
-        Pow -> Constant (n^m)
+        Pow -> if m >= 0 then Constant (n^m) else (BinaryOperation Div (Constant 1) (Constant (n^(-1*m))))
         Div -> simplifyFrac n m
 simplifyConstMath (BinaryOperation op exp1 exp2) = BinaryOperation op (simplifyConstMath exp1) (simplifyConstMath exp2)
 simplifyConstMath (ACOperation Add exps) = 

@@ -40,6 +40,7 @@ library
     , multiset
     , megaparsec
     , parser-combinators
+    , containers
   default-language: Haskell2010
 
 executable calculus-solver-exe
