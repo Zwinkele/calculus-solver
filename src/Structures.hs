@@ -43,4 +43,3 @@ instance Eq Expression where
     Application v exp == Application v' exp' = (v == v') && (exp == exp')
     Derivative v exp == Derivative v' exp' = (v == v') && (exp == exp')
     x == y = False
-

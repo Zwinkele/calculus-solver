@@ -115,12 +115,12 @@ subForVar (_:restOfSubs) v = subForVar restOfSubs v
 
 -- Composition of simplification functions
 simplifyFunc :: Calculation -> Calculation
-simplifyFunc = (simplifyStep "Combine like addition terms" (combineLikeAddTerms . combineACOp)) .
-               (simplifyStep "Combine like multiplication terms" (combineLikeMulTerms . combineACOp)) .
-               (simplifyStep "Unwrapping ACOperations with single expression" unwrapACOp) . 
-               (simplifyStep "Simplify Constant Math" simplifyConstMath) . 
-               (simplifyStep "Simplify d/dx(x) = 1 and d/dx(constant) = 0" simplifyDerivatives) . 
-               (simplifyStep "combine nested ACOperations" combineACOp)
+simplifyFunc = (simplifyStep "combine like addition terms rule" (combineLikeAddTerms . combineACOp)) .
+               (simplifyStep "combine like multiplication terms rule" (combineLikeMulTerms . combineACOp)) .
+               (simplifyStep "unwrapping operations rule" unwrapACOp) . 
+               (simplifyStep "constant math simplification rule" simplifyConstMath) . 
+               (simplifyStep "d/dx(x) = 1 or d/dx(constant) = 0 rule" simplifyDerivatives) . 
+               (simplifyStep "nested operations rule" combineACOp)
 
 simplify :: Calculation -> Calculation
 simplify calc = 

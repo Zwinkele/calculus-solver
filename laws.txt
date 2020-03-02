@@ -15,5 +15,5 @@ exponent power rule : a,b,c : (a^b)^c = a^(b*c)
 exponent power of product rule : a,b,c : (a*b)^c = a^c * b^c
 exponent power of fraction rule : a,b,c : (a/b)^c = a^c / b^c
 zero exponent : a : a^0 = 1
-addition to subtraction : a,b : a-b = a + (-b)
-division to multiplication : a,b : a/b = a*b^(-1)
+addition to subtraction rule : a,b : a-b = a + (-b)
+division to multiplication rule : a,b : a/b = a*b^(-1)
