@@ -115,7 +115,8 @@ subForVar (_:restOfSubs) v = subForVar restOfSubs v
 
 -- Composition of simplification functions
 simplifyFunc :: Calculation -> Calculation
-simplifyFunc = (simplifyStep "Combine/Simplify like multiplication terms" (combineLikeMulTerms . combineACOp)) .
+simplifyFunc = (simplifyStep "Combine like addition terms" (combineLikeAddTerms . combineACOp)) .
+               (simplifyStep "Combine like multiplication terms" (combineLikeMulTerms . combineACOp)) .
                (simplifyStep "Unwrapping ACOperations with single expression" unwrapACOp) . 
                (simplifyStep "Simplify Constant Math" simplifyConstMath) . 
                (simplifyStep "Simplify d/dx(x) = 1 and d/dx(constant) = 0" simplifyDerivatives) . 
@@ -150,6 +151,41 @@ simplifyFuncRepeat simplifyFunc exp =
         then simplifyFuncRepeat simplifyFunc newExp
         else exp
     where newExp = simplifyFunc exp
+
+combineLikeAddTerms :: Expression -> Expression
+combineLikeAddTerms (Constant n) = Constant n
+combineLikeAddTerms (Reference v) = Reference v
+combineLikeAddTerms (BinaryOperation op exp1 exp2) = BinaryOperation op (combineLikeAddTerms exp1) (combineLikeAddTerms exp2)
+combineLikeAddTerms (ACOperation Add exps) = ACOperation Add (combineAddExps exps [])
+combineLikeAddTerms (ACOperation Mul exps) = ACOperation Mul (map combineLikeAddTerms exps)
+combineLikeAddTerms (Application v exp) = Application v (combineLikeAddTerms exp)
+combineLikeAddTerms (Derivative v exp) = Derivative v (combineLikeAddTerms exp)
+
+-- Accum pairs are (Exps, Coefficient)
+combineAddExps :: [Expression] -> [([Expression],Expression)] -> [Expression]
+combineAddExps [] accum = addExpsAccumToExps (Map.toList (Map.fromListWith addExps (sortExpr accum)))
+combineAddExps (exp:exps) accum =
+    case exp of
+        (ACOperation Mul exps') -> combineAddExps exps ((extractConstant exps'):accum)
+        _ -> combineAddExps exps (([exp],Constant 1):accum)
+
+sortExpr :: [([Expression],Expression)] -> [([Expression],Expression)]
+sortExpr [] = []
+sortExpr (pair@(exps,exp):pairs) = ((sort exps),exp):(sortExpr pairs)
+
+addExpsAccumToExps :: [([Expression],Expression)] -> [Expression]
+addExpsAccumToExps [] = []
+addExpsAccumToExps (pair@(exps,c):pairs)
+    | c == Constant 1 = (ACOperation Mul exps):(addExpsAccumToExps pairs)
+    | otherwise = (ACOperation Mul (c:exps)):(addExpsAccumToExps pairs)
+
+extractConstant :: [Expression] -> ([Expression],Expression)
+extractConstant [] = ([],(Constant 1))
+extractConstant (exp:exps) = 
+    case exp of
+        Constant n -> (exps,Constant n)
+        _ -> (exp:(fst res),snd res) 
+                where res = extractConstant exps
 
 combineLikeMulTerms :: Expression -> Expression
 combineLikeMulTerms (Constant n) = Constant n
