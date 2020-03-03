@@ -117,10 +117,8 @@ subForVar (_:restOfSubs) v = subForVar restOfSubs v
 simplifyFunc :: Calculation -> Calculation
 simplifyFunc = (simplifyStep "combine like addition terms rule" (combineLikeAddTerms . combineACOp)) .
                (simplifyStep "combine like multiplication terms rule" (combineLikeMulTerms . combineACOp)) .
-               (simplifyStep "unwrapping operations rule" unwrapACOp) . 
-               (simplifyStep "constant math simplification rule" simplifyConstMath) . 
-               (simplifyStep "d/dx(x) = 1 or d/dx(constant) = 0 rule" simplifyDerivatives) . 
-               (simplifyStep "nested operations rule" combineACOp)
+               (simplifyStep "constant math simplification rule" (unwrapACOp . simplifyConstMath)) .  -- combine unwrapACOp into a step to "hide" it since it's for internal data structure purposes
+               (simplifyStep "d/dx(x) = 1 or d/dx(constant) = 0 rule" (simplifyDerivatives . combineACOp)) -- same for combineACOp
 
 simplify :: Calculation -> Calculation
 simplify calc = 
