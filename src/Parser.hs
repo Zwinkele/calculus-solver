@@ -85,8 +85,15 @@ equation = do {lhs <- expression;
                return (lhs, rhs)}
 
 parseExpression :: String -> Expression
-parseExpression s = fromJust (parseMaybe expression s)
+parseExpression s = case parseMaybe expression s of
+    Nothing -> error "Invalid syntax in expression!"
+    Just exp -> exp
+
+parseLaw :: String -> Law
+parseLaw s = case parseMaybe law s of
+    Nothing -> error "Invalid syntax in law!"
+    Just l -> l
 
 readLaws :: String -> IO ([Law])
 readLaws location = do {text <- readFile location;
-                        return (catMaybes (map (parseMaybe law) (lines text)))}
+                        return (map parseLaw (lines text))}
