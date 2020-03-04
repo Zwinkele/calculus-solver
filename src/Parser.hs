@@ -90,9 +90,9 @@ parseExpression s = case parseMaybe expression s of
     Just exp -> exp
 
 parseLaw :: String -> Law
-parseLaw s = case parseMaybe law s of
-    Nothing -> error "Invalid syntax in law!"
-    Just l -> l
+parseLaw s = case parse (law <* eof) "" s of
+              Left bundle -> error (errorBundlePretty bundle)
+              Right l -> l
 
 readLaws :: String -> IO ([Law])
 readLaws location = do {text <- readFile location;
