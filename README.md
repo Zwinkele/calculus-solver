@@ -1,8 +1,8 @@
 # calculus-solver
 
 To run our solver, simply use "stack run". It will ask for the user to input an expression to simplify,
-    like "d/dx(a+b)", and then print out the results in a (not very) pretty format.
-    It will also create a file output.tex in the main folder, which can then be compiled into a nice .pdf.
+    like "d/dx(a+b)", the output LaTeX file name ("outputfilename"), and then print out the results in a (not very) pretty format.
+    It will also create a file outputfilename.tex in the main folder, which can then be compiled into a nice .pdf.
     We have included example.pdf in the main folder as a sample.
 
 

@@ -15,10 +15,12 @@ main = do
         laws <- readLaws "laws.txt"
         putStrLn "Enter an expression:"
         expString <- getLine
+        putStrLn "Enter desired output file name:"
+        outputFileString <- getLine
         case parse (expression <* eof) "" expString of
             Left bundle -> putStr (errorBundlePretty bundle)
             Right exp -> do
                             let calc = simplify (calculate laws exp)
                             pPrint calc
-                            renderToFile (makeDocument calc) "output.tex"
+                            renderToFile (makeDocument calc) (outputFileString ++ ".tex")
 
