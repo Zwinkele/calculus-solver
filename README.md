@@ -14,6 +14,14 @@ Current progress:
         and we also have a function to read laws from a .txt file.
 
     - Application of rules and special cases for simplification is handled in Derivation.hs.
+        - Special cases for simplification include:
+            - Simplifying d/dx(x) = 1 and d/dx(constant) = 0
+            - Simplifying constant math (e.g. 1+2=3)
+            - Combining like multiplication terms (e.g. x^2*x^4 = x^6)
+            - Combining like addition terms (e.g. 3*x^2*y + 6*y*x^2 = 9*y*x^2)
+        - Cases for simplification hidden because they apply to restructuring data structures only:
+            - Combining nested ACOperations
+            - Unwrapping an ACoperation with only one expression in the expression list
 
     - LaTeX.hs handles rendering of a Calculation object into a .tex file.
 
