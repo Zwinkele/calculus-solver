@@ -84,11 +84,6 @@ equation = do {lhs <- expression;
                rhs <- expression;
                return (lhs, rhs)}
 
-parseExpression :: String -> Expression
-parseExpression s = case parseMaybe expression s of
-    Nothing -> error "Invalid syntax in expression!"
-    Just exp -> exp
-
 parseLaw :: String -> Law
 parseLaw s = case parse (law <* eof) "" s of
               Left bundle -> error (errorBundlePretty bundle)
