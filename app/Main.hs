@@ -7,6 +7,7 @@ import Printer
 import LaTeX
 
 import Text.Pretty.Simple
+import Text.Megaparsec
 
 main :: IO ()
 main = do 
@@ -14,8 +15,10 @@ main = do
         laws <- readLaws "laws.txt"
         putStrLn "Enter an expression:"
         expString <- getLine
-        let exp = parseExpression expString
-            calc = simplify (calculate laws exp)
-        pPrint calc
-        renderToFile (makeDocument calc) "output.tex"
+        case parse (expression <* eof) "" expString of
+            Left bundle -> putStr (errorBundlePretty bundle)
+            Right exp -> do
+                            let calc = simplify (calculate laws exp)
+                            pPrint calc
+                            renderToFile (makeDocument calc) "output.tex"
 
