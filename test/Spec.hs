@@ -8,9 +8,10 @@ import Data.MultiSet
 import Test.Tasty
 import Test.Tasty.HUnit
 import Data.Maybe
+import Data.Ratio
 
 main :: IO ()
-main = defaultMain (testGroup "All Tests" [expressionParsingTests, lawParsingTests, rewritingTests])
+main = defaultMain (testGroup "All Tests" [expressionParsingTests, lawParsingTests, rewritingTests, specialSimplificationTests])
 
 expressionParsingTests = testGroup "Expression Parsing Tests" [ept1, ept2, ept3]
 ept1 = testCase "f(x)" 
@@ -85,6 +86,42 @@ rwt2 = testCase "substitution x=5"
                     (Reference (Variable "x"),
                     Constant 5))
                 (Reference (Variable "x"))))
+specialSimplificationTests = testGroup "Special Simplification Tests" [sst1,sst2,sst3,sst4,sst5,sst6,sst7]
+sst1 = testCase "Combine like addition terms"
+        (assertEqual ""
+            (combineLikeAddTerms (ACOperation Add [(ACOperation Mul [Constant 3, Reference (Variable "x")]), (ACOperation Mul [Reference (Variable "x"), Constant 4])]))
+            (ACOperation Add [ACOperation Mul [ACOperation Add [Constant (3 % 1),Constant (4 % 1)],Reference (Variable "x")]])
+        )
+sst2 = testCase "Combine like multiplication terms"
+        (assertEqual ""
+            (combineLikeMulTerms (ACOperation Mul [(BinaryOperation Pow (Reference (Variable "x")) (Constant 2)), (BinaryOperation Pow (Reference (Variable "x")) (Constant 3))]))
+            (ACOperation Mul [BinaryOperation Pow (Reference (Variable "x")) (ACOperation Add [Constant (2 % 1),Constant (3 % 1)])])
+        )
+sst3 = testCase "Unwrap ACOperation"
+        (assertEqual ""
+            (unwrapACOp (ACOperation Add [Constant 3]))
+            (Constant (3 % 1))
+        )
+sst4 = testCase "Combine nested ACOperations"
+        (assertEqual ""
+            (combineACOp (ACOperation Add [(Constant 3), (ACOperation Add [Constant 4, Constant 2])]))
+            (ACOperation Add [Constant (3 % 1),Constant (4 % 1),Constant (2 % 1)])
+        )
+sst5 = testCase "d/dx(x) = 1"
+        (assertEqual ""
+            (simplifyDerivatives (Derivative (Variable "x") (Reference (Variable "x"))))
+            (Constant (1 % 1))
+        )
+sst6 = testCase "d/dx(constant) = 0"
+        (assertEqual ""
+            (simplifyDerivatives (Derivative (Variable "x") (Constant 3)))
+            (Constant (0 % 1))
+        )
+sst7 = testCase "Simplify Constant Math"
+        (assertEqual ""
+            (simplifyConstMath (ACOperation Add [BinaryOperation Sub (Constant 3) (Constant 2), BinaryOperation Pow (Constant 2) (Constant 3), BinaryOperation Div (Constant 8) (Constant 2), ACOperation Add [Constant 3, Constant 2], ACOperation Mul [Constant 0, Constant 3]]))
+            (ACOperation Add [Constant (1 % 1),Constant (8 % 1),Constant (4 % 1),ACOperation Add [Constant (5 % 1)],Constant (0 % 1)])
+        )
 
 -- some test data
 expr = ACOperation Add exps
