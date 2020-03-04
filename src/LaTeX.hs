@@ -9,6 +9,7 @@ import Text.LaTeX
 import Text.LaTeX.Base.Syntax
 import Text.LaTeX.Packages.AMSMath
 import Text.LaTeX.Base.Commands
+import Text.LaTeX.Base.Class
 
 renderToFile :: LaTeX -> String -> IO ()
 renderToFile latex name = renderFile name latex
@@ -20,6 +21,7 @@ makeDocument calc = preamble
 preamble :: LaTeX
 preamble = documentclass [] article
         <> usepackage [] "amsmath"
+        <> usepackage [] "breqn"
         <> author "Zachary Winkeler and Bruce Zou"
         <> title "Calculus"
 
@@ -30,16 +32,19 @@ body calc = maketitle
 
 texCalc :: Calculation -> LaTeX
 texCalc (Calc expr steps) = "We will attempt to simplify the following expression:"
-                         <> mathDisplay (texOuterExpr expr)
+                         <> texWrappedMath (texOuterExpr expr)
                          <> foldr (<>) mempty (map texStep steps)
                          <> "This is our final answer."
 
+texWrappedMath :: LaTeX -> LaTeX
+texWrappedMath = env "dmath"
+
 texStep :: Step -> LaTeX
 texStep (Step rule expr) = 
-        raw (fromString ("We can use the ")) 
+        "We can use the "
      <> textit (raw (fromString rule))
-     <> raw (fromString (" to rewrite our expression as:"))
-     <> mathDisplay (texOuterExpr expr)
+     <> " to rewrite our expression as:"
+     <> texWrappedMath (texOuterExpr expr)
 
 texOuterExpr :: Expression -> LaTeX
 texOuterExpr expr = case expr of
@@ -70,14 +75,22 @@ texBinOp op = case op of
 
 texACOp :: ACOp -> [LaTeX] -> LaTeX
 texACOp op = case op of
-    Add -> foldr1 (between (TeXRaw "+"))
+    Add -> foldr1 (between (TeXRaw (fromString "+")))
     Mul -> foldr1 cdot
 
-left :: LaTeX -> LaTeX
-left = (TeXRaw (fromString "\\left") <>)
+left :: LaTeX
+left = comm "left"
 
-right :: LaTeX -> LaTeX
-right = (TeXRaw (fromString "\\right") <>)
+right :: LaTeX
+right = comm "right"
+
+comm :: String -> LaTeX
+comm s = TeXRaw (fromString ("\\" ++ s))
 
 parenthesize :: LaTeX -> LaTeX
-parenthesize latex = between latex (left "(") (right ")")
+parenthesize latex = between latex (left <> "(") (right <> ")")
+
+env :: String -> LaTeX -> LaTeX
+env s latex = between latex 
+    (TeXRaw (fromString ("\\begin{" ++ s ++ "}")))
+    (TeXRaw (fromString ("\\end{" ++ s ++ "}")))
